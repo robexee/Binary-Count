@@ -24,7 +24,6 @@ while True:
                                 int(index_finger_tip.y * h))
             cv.circle(frame, index_finger_pos, 7, (255, 30, 30), -1)
             mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
-            cv.circle(frame, center_point, 7, (255, 30, 30), -1)
 
     cv.imshow('Binary Count', frame)
     if cv.waitKey(10) & 0xFF==ord('q'):
