@@ -18,10 +18,18 @@ def fingers_counting(landmarks):
 
     return fingers.count(True)
 
+def resize_camera(frame, scale = 0.75):
+    width = int(frame.shape[1] * scale)
+    height = int(frame.shape[0] * scale)
+    dimensions = (width, height)
+    resized_frame = cv.resize(frame, dimensions, interpolation=cv.INTER_AREA)
+    return resized_frame
+
 video = cv.VideoCapture(0)
 while True:
     isTrue, frame = video.read()
     frame = cv.flip(frame, 1)
+    frame = resize_camera(frame, 2)
     rgb_frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
     results = hands.process(rgb_frame)
     index_finger_pos = None
