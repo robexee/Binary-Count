@@ -18,12 +18,28 @@ def fingers_counting(landmarks):
 
     return fingers.count(True)
 
+
 def resize_camera(frame, scale = 0.75):
     width = int(frame.shape[1] * scale)
     height = int(frame.shape[0] * scale)
     dimensions = (width, height)
     resized_frame = cv.resize(frame, dimensions, interpolation=cv.INTER_AREA)
     return resized_frame
+
+
+def binary_count(hand_landmarks):
+    lm = hand_landmarks.landmark
+    
+    fingers = [
+        lm[4].x > lm[3].x,
+        lm[8].y < lm[6].y,
+        lm[12].y < lm[10].y,
+        lm[16].y < lm[14].y,
+        lm[20].y < lm[18].y
+    ]
+    binary_value = sum([state << i for i, state in enumerate(fingers)])
+    return binary_value
+
 
 video = cv.VideoCapture(0)
 while True:
@@ -36,8 +52,10 @@ while True:
     if results.multi_hand_landmarks:
         for hand_landmarks in results.multi_hand_landmarks:
             finger_count = fingers_counting(hand_landmarks)
+            binary_val = binary_count(hand_landmarks)
             mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS,cirlce_color)
             cv.putText(frame, f'Fingers: {finger_count}', (10, 30), cv.FONT_HERSHEY_COMPLEX, 1, (255,0,0), 2)
+            cv.putText(frame, f"Binary Number: {binary_val}", (10, 50), cv.FONT_HERSHEY_COMPLEX, 1, (255,0,255), 2)
 
     cv.imshow('Binary Count', frame)
     if cv.waitKey(10) & 0xFF==ord('q'):
