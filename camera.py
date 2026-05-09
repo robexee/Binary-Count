@@ -1,6 +1,6 @@
 import cv2 as cv
 import mediapipe as mp
-
+from collections import deque, Counter
 
 class HandBinaryTracker:
 
@@ -13,6 +13,7 @@ class HandBinaryTracker:
             max_num_hands = max_hands
         )
         self.circle_color = self.mp_drawing.DrawingSpec(color=(0,255,0), thickness = 3, circle_radius = 1)
+        self.buffer = deque(maxlen=5)
 
     def get_binary_count(self, hand_landmarks, hand_label):
         lm = hand_landmarks.landmark
@@ -33,7 +34,10 @@ class HandBinaryTracker:
         decimal_value = sum(state << i for i, state in enumerate(fingers))
         binary_string = "".join(str(int(state)) for state in fingers[::-1])
 
-        return decimal_value, binary_string
+        self.buffer.append((decimal_value, binary_string))
+        most_freq = Counter(self.buffer).most_common(1)[0][0]
+
+        return most_freq[0], most_freq[1]
     
     def draw(self, frame, hand_landmarks):
         self.mp_drawing.draw_landmarks(
@@ -71,6 +75,8 @@ def main():
 
                 cv.putText(frame, f"Decimal: {decimal_val}", (10,40), cv.FONT_HERSHEY_COMPLEX, 1, (255,255,255), 1)
                 cv.putText(frame, f"Binary: {binary_str}", (frame.shape[1] - 250, 40), cv.FONT_HERSHEY_COMPLEX, 1, (255,255,255), 1)
+        else:
+            tracker.buffer.clear()
         
         cv.imshow('Binary Finger Counter', frame)
 
