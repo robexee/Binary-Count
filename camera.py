@@ -51,8 +51,8 @@ while True:
             decimal_val, binary_str = binary_count(hand_landmarks, hand_label)
             mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS, cirlce_color)
 
-            cv.putText(frame, f"Decimal Number: {decimal_val}", (10, 55), cv.FONT_HERSHEY_COMPLEX, 1, (255,0,255), 2)
-            cv.putText(frame, f"Binary: {binary_str}", (10, 80), cv.FONT_HERSHEY_COMPLEX, 1, (255,0,255), 2)
+            cv.putText(frame, f"Decimal Number: {decimal_val}", (10, 40), cv.FONT_HERSHEY_COMPLEX, 1, (255,255,255), 1)
+            cv.putText(frame, f"Binary: {binary_str}", (frame.shape[1] - 250, 46), cv.FONT_HERSHEY_COMPLEX,1 , (255,255,255), 1)
 
     cv.imshow('Binary Count', frame)
     if cv.waitKey(10) & 0xFF==ord('q'):
