@@ -7,17 +7,6 @@ mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5, max_num_hands = 1)
 cirlce_color = mp_drawing.DrawingSpec(color = (0,255,0), thickness = 3, circle_radius = 1)
 
-def fingers_counting(landmarks):
-    fingers = []
-
-    lm = hand_landmarks.landmark
-    fingers.append(lm[4].x > lm[3].x)
-
-    for tip in [8, 12, 16, 20]:
-        fingers.append(lm[tip].y < lm[tip - 2].y)
-
-    return fingers.count(True)
-
 
 def resize_camera(frame, scale = 0.75):
     width = int(frame.shape[1] * scale)
@@ -42,8 +31,9 @@ def binary_count(hand_landmarks, hand_label):
         lm[16].y < lm[14].y,
         lm[20].y < lm[18].y
     ]
-    binary_value = sum([state << i for i, state in enumerate(fingers)])
-    return binary_value
+    decimal_value = sum(state << i for i, state in enumerate(fingers))
+    binary_value = "".join(str(int(state)) for state in fingers[::-1])
+    return decimal_value, binary_value
 
 
 video = cv.VideoCapture(0)
@@ -53,23 +43,20 @@ while True:
     frame = resize_camera(frame, 2)
     rgb_frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
     results = hands.process(rgb_frame)
-    index_finger_pos = None
+    
     if results.multi_hand_landmarks:
-        for hand_landmarks in results.multi_hand_landmarks:
-            for hand_landmarks, handedness in zip(results.multi_hand_landmarks,
-                                      results.multi_handedness):
-                hand_label = handedness.classification[0].label
-            finger_count = fingers_counting(hand_landmarks)
-            binary_val = binary_count(hand_landmarks, hand_label)
-            mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS,cirlce_color)
-            cv.putText(frame, f'Fingers: {finger_count}', (10, 30), cv.FONT_HERSHEY_COMPLEX, 1, (255,0,0), 2)
-            cv.putText(frame, f"Binary Number: {binary_val}", (10, 55), cv.FONT_HERSHEY_COMPLEX, 1, (255,0,255), 2)
-            cv.putText(frame, f"{hand_label} hand", (10,80), cv.FONT_HERSHEY_COMPLEX, 1, (0,255,0), 2)
+        for hand_landmarks, handedness in zip(results.multi_hand_landmarks, results.multi_handedness):
+            hand_label = handedness.classification[0].label
+            
+            decimal_val, binary_str = binary_count(hand_landmarks, hand_label)
+            mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS, cirlce_color)
+
+            cv.putText(frame, f"Decimal Number: {decimal_val}", (10, 55), cv.FONT_HERSHEY_COMPLEX, 1, (255,0,255), 2)
+            cv.putText(frame, f"Binary: {binary_str}", (10, 80), cv.FONT_HERSHEY_COMPLEX, 1, (255,0,255), 2)
 
     cv.imshow('Binary Count', frame)
     if cv.waitKey(10) & 0xFF==ord('q'):
         break
-
 
 video.release()
 cv.destroyAllWindows()
