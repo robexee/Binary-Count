@@ -1,7 +1,9 @@
 import cv2 as cv
 import mediapipe as mp
 from collections import deque, Counter
+import time
 
+font = cv.FONT_HERSHEY_COMPLEX
 class HandBinaryTracker:
 
     def __init__(self, max_hands: int = 1, detection_conf: float = 0.5, tracking_conf:  float = 0.5):
@@ -52,6 +54,8 @@ def resize_camera(frame, scale: float = 0.75):
     
 
 def main():
+    prev_frame_time = 0
+    new_frame_time = 0
     video = cv.VideoCapture(0)
     tracker = HandBinaryTracker()
 
@@ -63,7 +67,10 @@ def main():
         frame = cv.flip(frame, 1)
         frame = resize_camera(frame, 2)
         rgb_frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
-
+        new_frame_time = time.time()
+        fps = 1 / (new_frame_time - prev_frame_time)
+        prev_frame_time = new_frame_time
+        cv.putText(frame, f"FPS: {int(fps)}", (frame.shape[1] - 150,40), font, 1, (255,255,255), 1)
         results = tracker.hands.process(rgb_frame)
 
         if results.multi_hand_landmarks:
@@ -73,8 +80,8 @@ def main():
                 decimal_val, binary_str = tracker.get_binary_count(hand_landmarks, hand_label)
                 tracker.draw(frame, hand_landmarks)
 
-                cv.putText(frame, f"Decimal: {decimal_val}", (10,40), cv.FONT_HERSHEY_COMPLEX, 1, (255,255,255), 1)
-                cv.putText(frame, f"Binary: {binary_str}", (frame.shape[1] - 250, 40), cv.FONT_HERSHEY_COMPLEX, 1, (255,255,255), 1)
+                cv.putText(frame, f"Decimal: {decimal_val}", (10,40), font, 1, (255,255,255), 1)
+                cv.putText(frame, f"Binary: {binary_str}", (10, 70), font, 1, (255,255,255), 1)
         else:
             tracker.buffer.clear()
         
